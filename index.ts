@@ -39,6 +39,13 @@ const onConnection = (socket: Socket) => {
     }
     console.log("token found");
 
+    if (tokenFound.class != data.class) {
+      responseData.reason = "Provider does not match";
+      response(responseData);
+      console.log("Provider does not match");
+      return;
+    }
+
     if (tokenFound.count <= 0 && tokenFound.count != undefined) {
       responseData.reason = "Token count at 0";
       response(responseData);
