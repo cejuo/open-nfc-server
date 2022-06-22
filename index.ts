@@ -4,19 +4,20 @@ import { nanoid } from "nanoid";
 
 import { Server, Socket } from "socket.io";
 import { createServerSocket } from "simple-socket";
+import * as fs from "fs";
 
-const client = new MongoClient(
-  "mongodb://localhost:27017/?readPreference=primary&appname=MongoDB%20Compass&directConnection=true&ssl=false"
-);
+const client = new MongoClient();
 let db: Db;
 let users: Collection;
 
 client.connect().then((res) => {
-  db = res.db("open-nfc");
-  users = db.collection("users");
+  db = res.db("securpicks");
+  users = db.collection("open-nfc-users");
 });
 
-const server: Server = createServerSocket("localhost", "4002", {});
+const server: Server = createServerSocket("securpicks.com", "4002", {
+  passphrase: process.env.socket,
+});
 
 const onConnection = (socket: Socket) => {
   console.log(`New connection ${socket.id}`);
@@ -28,6 +29,8 @@ const onConnection = (socket: Socket) => {
     console.log("============");
     console.log("token:update");
     data = JSON.parse(data);
+    console.log(data);
+
     const responseData = { token: {}, ok: false, reason: "" };
 
     const found = await users.findOne({ _id: new ObjectId(data.userId) });
@@ -38,6 +41,9 @@ const onConnection = (socket: Socket) => {
       return;
     }
     console.log("token found");
+
+    console.log("tokenfound class", tokenFound.class);
+    console.log("data class", data.class);
 
     if (tokenFound.class != data.class) {
       responseData.reason = "Provider does not match";
@@ -73,8 +79,12 @@ const onConnection = (socket: Socket) => {
     server.emit("reload");
   });
 
+  socket.on("user:signup", async (data, response) => {
+    //
+  });
+
   socket.on("user:login", async (data, response) => {
-    const responseData = { userId: "", tokens: [], ok: false, reason: "", session: "" };
+    const responseData = { class: "", userId: "", tokens: [], ok: false, reason: "", session: "" };
     let loginSession = false;
     let loginPassword = false;
     console.log(data);
@@ -123,6 +133,7 @@ const onConnection = (socket: Socket) => {
     responseData.session = session;
     responseData.tokens = found.tokens;
     responseData.userId = found._id.toString();
+    responseData.class = found.class;
     console.log(responseData);
 
     response(responseData);

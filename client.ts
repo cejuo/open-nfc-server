@@ -1,6 +1,6 @@
 import { io } from "socket.io-client";
 const PORT = 4002;
-const DOMAIN = (true ? "http://192.168.1.87:" : "https://securpicks.com:") + PORT.toString();
+const DOMAIN = (false ? "http://192.168.1.87:" : "https://.com:") + PORT.toString();
 
 const socket = io(DOMAIN, {
   reconnection: true,
@@ -19,7 +19,7 @@ socket.on("connect", () => {
 
 socket.on("connect_error", (error: any) => {
   console.log(`[!] Socket error`);
-  console.log(error);
+  //console.log(error);
   // prettier-ignore
 });
 
